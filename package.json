@@ -21,7 +21,9 @@
   ],
   "files": [
     "index.d.ts",
-    "index.js"
+    "index.js",
+    "example.js",
+    "README.md"
   ],
   "napi": {
     "binaryName": "browser-cookies",
@@ -41,7 +43,9 @@
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
     "test": "node --test __test__/*.js",
-    "prepublishOnly": "napi prepublish -t npm"
+    "test:with-mock": "node create_test_db.js && TEST_CHROME_PATH=/tmp/test_chrome node test_real.js",
+    "prepublishOnly": "napi prepublish -t npm",
+    "clean": "rimraf *.node artifacts target"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.1.1",

@@ -1,65 +1,114 @@
-# Tidy Browser
+# @sec-ant/browser-cookies
 
-<!--toc:start-->
-
-- [Tidy Browser](#tidy-browser)
-  - [Install And Usage](#install-and-usage)
-  - [Core crate](#core-crate)
-  - [Status](#status)
-  <!--toc:end-->
+A lightweight, fast Node.js library for parsing browser cookies using Rust and NAPI-RS.
 
 ## Features
 
-- Get browsers cookies and logins(password, now Chromium only).
-- Output csv, json, jsonl.
-- Filter by host/domain.
-- Support Windows, Linux, Macos.
-- Support Chromium, Firefox and Safari.
-- Parse BinaryCookies
+- 🚀 **Fast**: Rust-based parsing with zero-copy string handling
+- 🌐 **Cross-browser**: Supports Chrome, Firefox, and Safari
+- 🎯 **Domain filtering**: Filter cookies by domain/host
+- 🔒 **Safe**: Non-blocking database access with temporary file copying
+- 💼 **Cross-platform**: Works on Windows, macOS, and Linux
+- 📦 **Zero dependencies**: Pure npm package without postinstall scripts
 
-## Install And Usage
-
-Using [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
-
-> [!NOTE]
-> Windows require Administrator
+## Installation
 
 ```bash
-cargo binstall tidy-browser
-
-# Get data for all available browsers
-tidy-browser -a
-cd results
-
-# Get Chrome cookie and login info
-tidy-browser chromium -n Chrome -v cookie,login
-cd results
-
-# Filter by host/domain
-tidy-browser -a --host github.com
-cd results
-
-# Available data formats: csv, json, jsonl(jsonlines)
-tidy-browser --out-format json -a
-
-# Parse BinaryCookies
-tidy-browser binary-cookies -i ~/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies
-cat ./binary_cookies.csv
+npm install @sec-ant/browser-cookies
 ```
 
-## Shell completion
+## Usage
 
-```bash
-eval $(tidy-browser completions zsh)
-eval $(tidy-browser completions <your shell>)
+```javascript
+const { getCookies, getChromeCookies, getFirefoxCookies } = require('@sec-ant/browser-cookies');
+
+// Get all Chrome cookies
+const allCookies = await getChromeCookies();
+
+// Get Chrome cookies for specific domain
+const googleCookies = await getChromeCookies('google.com');
+
+// Get Firefox cookies
+const firefoxCookies = await getFirefoxCookies('mozilla.org');
+
+// Generic browser API
+const cookies = await getCookies('chrome', 'example.com');
 ```
 
-## Core crate
+## API
 
-Easily make a request using the authorization data from your browser.
+### Cookie Interface
 
-[decrypt-cookies](https://github.com/saying121/tidy-browser/tree/master/crates/decrypt-cookies)
+```typescript
+interface Cookie {
+  domain: string;
+  name: string;
+  value: string;
+  path?: string;
+  expires?: string; // ISO 8601 string
+  secure?: boolean;
+  httpOnly?: boolean;
+}
+```
 
-## Status
+### Functions
 
-[status](https://github.com/saying121/tidy-browser/tree/master/crates/decrypt-cookies/README.md#test-status)
+#### `getChromeCookies(domain?: string): Promise<Cookie[]>`
+
+Retrieves cookies from Chrome/Chromium browsers.
+
+- `domain` (optional): Filter cookies by domain. Supports partial matching.
+
+#### `getFirefoxCookies(domain?: string): Promise<Cookie[]>`
+
+Retrieves cookies from Firefox browsers.
+
+- `domain` (optional): Filter cookies by domain. Supports partial matching.
+
+#### `getSafariCookies(domain?: string): Cookie[]`
+
+Retrieves cookies from Safari browser (macOS only).
+
+#### `getCookies(browser: string, domain?: string): Promise<Cookie[]>`
+
+Generic function to retrieve cookies from any supported browser.
+
+- `browser`: Browser name ('chrome', 'firefox', or 'safari')
+- `domain` (optional): Filter cookies by domain
+
+## Browser Support
+
+| Browser | Windows | macOS | Linux |
+|---------|---------|-------|-------|
+| Chrome  | ✅      | ✅    | ✅    |
+| Firefox | ✅      | ✅    | ✅    |  
+| Safari  | ❌      | ✅    | ❌    |
+
+## How it Works
+
+The library directly reads browser cookie databases:
+
+- **Chrome/Chromium**: Reads from `Cookies` SQLite database in browser profile
+- **Firefox**: Reads from `cookies.sqlite` in Firefox profile directory
+- **Safari**: Reads from `Cookies.binarycookies` file (macOS only)
+
+The library safely copies database files to temporary locations to avoid locking the browser's active databases.
+
+## Performance
+
+Built with Rust and NAPI-RS for maximum performance:
+- Zero-copy string operations where possible
+- Minimal memory allocations
+- Native speed SQLite parsing
+- Async/await support without blocking the event loop
+
+## License
+
+LGPL-3.0-or-later
+
+## Notes
+
+- Encrypted cookie values are returned as-is (decryption would require additional dependencies)
+- The library gracefully handles missing browsers or inaccessible databases
+- Temporary files are automatically cleaned up after use
+- Works without requiring browser installation for basic API testing
